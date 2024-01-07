@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
         '/regis': (context) => const RegisterScreen(),
         '/home': (context) => const Home(),
         '/cari': (context) => const MyCari(),
-        '/profil': (context) => const MyProfil(),
+        '/profil': (context) => MyProfil(),
         '/movie': (context) => const MoviePage(),
         // '/video': (context) => VideoPlayer(),
       },

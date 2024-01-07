@@ -9,6 +9,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -27,6 +28,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Image.asset(
               'assets/image/logo.png', // Ganti dengan path logo.jpg yang sesuai
               height: 100, // Sesuaikan tinggi gambar
+            ),
+            const SizedBox(height: 20.0),
+            SizedBox(
+              width: MediaQuery.of(context).size.width / 1.5,
+              child: TextField(
+                controller: _usernameController,
+                style: const TextStyle(color: Colors.black),
+                decoration: const InputDecoration(
+                  hintText: 'Username',
+                  hintStyle: TextStyle(color: Colors.grey),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blueGrey),
+                  ),
+                  fillColor: Colors.white,
+                  filled: true,
+                ),
+              ),
             ),
             const SizedBox(height: 20.0),
             SizedBox(
@@ -73,6 +94,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ElevatedButton(
               onPressed: () async {
                 final message = await AuthService().register(
+                  username: _usernameController.text,
                   email: _emailController.text,
                   password: _passwordController.text,
                 );
