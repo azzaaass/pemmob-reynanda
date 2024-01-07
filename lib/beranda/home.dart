@@ -53,7 +53,7 @@ class _MyHomeState extends State<MyHome> {
                 height: 60,
                 width: double.infinity,
                 child: ListView.builder(
-                    physics: BouncingScrollPhysics(),
+                    physics: const BouncingScrollPhysics(),
                     itemCount: items.length,
                     scrollDirection: Axis.horizontal,
                     itemBuilder: (ctx, index) {

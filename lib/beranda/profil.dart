@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tugas_aplikasi/komponen/histori_detail.dart';
@@ -6,7 +7,9 @@ import 'package:tugas_aplikasi/komponen/list_profil.dart';
 import 'package:tugas_aplikasi/komponen/profil_histori.dart';
 
 class MyProfil extends StatelessWidget {
-  const MyProfil({Key? key}) : super(key: key);
+  MyProfil({Key? key}) : super(key: key);
+  final db = FirebaseFirestore.instance;
+  final uid = FirebaseAuth.instance.currentUser?.uid;
 
   @override
   Widget build(BuildContext context) {
@@ -43,27 +46,32 @@ class MyProfil extends StatelessWidget {
             const SizedBox(
               height: 7,
             ),
-            const Row(
+            Row(
               children: [
-                SizedBox(
+                const SizedBox(
                   width: 7,
                 ),
-                Icon(
+                const Icon(
                   Icons.account_circle_outlined,
                   size: 60,
                   color: Colors.white,
                 ),
-                SizedBox(
+                const SizedBox(
                   width: 10,
                 ),
-                Text(
-                  "REYNANDA",
-                  style: TextStyle(
-                    fontSize: 25,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                StreamBuilder(
+                    stream: db.collection("userData").doc(uid).snapshots(),
+                    builder: (context, snapshot) {
+                      var data = snapshot.data;
+                      return Text(
+                        data?['username'] ?? '',
+                        style: const TextStyle(
+                          fontSize: 25,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    }),
               ],
             ),
             const SingleChildScrollView(

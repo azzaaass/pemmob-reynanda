@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class Subs extends StatefulWidget {
@@ -8,8 +10,8 @@ class Subs extends StatefulWidget {
 }
 
 class _SubsState extends State<Subs> {
-  int userPoints = 100; // Ganti dengan jumlah poin pengguna yang sebenarnya
-
+  final db = FirebaseFirestore.instance;
+  final uid = FirebaseAuth.instance.currentUser?.uid;
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -30,13 +32,18 @@ class _SubsState extends State<Subs> {
                     fit: BoxFit.cover,
                   ),
                 ),
-                Text(
-                  "Your coins: $userPoints",
-                  style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
-                ),
+                StreamBuilder(
+                    stream: db.collection("userData").doc(uid).snapshots(),
+                    builder: (context, snapshot) {
+                      var data = snapshot.data;
+                      return Text(
+                        "Your coins: ${data?['coins'] ?? ''}",
+                        style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      );
+                    }),
               ],
             ),
             const SizedBox(height: 20),
@@ -80,38 +87,50 @@ class _SubsState extends State<Subs> {
             height: 50,
             fit: BoxFit.cover,
           ),
-          ListTile(
-            title: Text('$points coins', style: TextStyle(color: Colors.white)),
-            subtitle: Text('Rp $price', style: TextStyle(color: Colors.white)),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Confirm Top Up',
+          StreamBuilder(
+              stream: db.collection("userData").doc(uid).snapshots(),
+              builder: (context, snapshot) {
+                var data = snapshot.data;
+                return ListTile(
+                  title: Text('$points coins',
                       style: TextStyle(color: Colors.white)),
-                  content: Text('Top up $points coins for Rp $price. Continue?',
-                      style: TextStyle(color: Colors.white)),
-                  backgroundColor: Colors.grey[850],
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text('OK',
-                          style: TextStyle(color: Colors.white)),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Cancel',
-                          style: TextStyle(color: Colors.white)),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                  subtitle:
+                      Text('Rp $price', style: TextStyle(color: Colors.white)),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Confirm Top Up',
+                            style: TextStyle(color: Colors.white)),
+                        content: Text(
+                            'Top up $points coins for Rp $price. Continue?',
+                            style: TextStyle(color: Colors.white)),
+                        backgroundColor: Colors.grey[850],
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              int coins = data?['coins'];
+                              db.collection("userData").doc(uid).set({
+                                "coins": coins + points,
+                              }, SetOptions(merge: true));
+                              Navigator.pop(context);
+                            },
+                            child: const Text('OK',
+                                style: TextStyle(color: Colors.white)),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: const Text('Cancel',
+                                style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              }),
         ],
       ),
     );
@@ -128,41 +147,50 @@ class _SubsState extends State<Subs> {
             height: 50,
             fit: BoxFit.cover,
           ),
-          ListTile(
-            title: Text('$duration subscription',
-                style: TextStyle(color: Colors.white)),
-            subtitle:
-                Text('$price coins', style: TextStyle(color: Colors.white)),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Confirm subscription',
+          StreamBuilder(
+              stream: db.collection("userData").doc(uid).snapshots(),
+              builder: (context, snapshot) {
+                var data = snapshot.data;
+                return ListTile(
+                  title: Text('$duration subscription',
                       style: TextStyle(color: Colors.white)),
-                  content: Text(
-                      'Subscribe for $duration with $price coins. Continue?',
+                  subtitle: Text('$price coins',
                       style: TextStyle(color: Colors.white)),
-                  backgroundColor: Colors.grey[850],
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text('OK',
-                          style: TextStyle(color: Colors.white)),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Cancel',
-                          style: TextStyle(color: Colors.white)),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Confirm subscription',
+                            style: TextStyle(color: Colors.white)),
+                        content: Text(
+                            'Subscribe for $duration with $price coins. Continue?',
+                            style: TextStyle(color: Colors.white)),
+                        backgroundColor: Colors.grey[850],
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              int coins = data?['coins'];
+                              db.collection("userData").doc(uid).set({
+                                "coins": coins - price,
+                              }, SetOptions(merge: true));
+                              Navigator.pop(context);
+                            },
+                            child: const Text('OK',
+                                style: TextStyle(color: Colors.white)),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: const Text('Cancel',
+                                style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              }),
         ],
       ),
     );

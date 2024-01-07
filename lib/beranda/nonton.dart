@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -26,22 +28,21 @@ class _NontonState extends State<Nonton> {
 
   late VideoPlayerController _controller;
   late Future<void> _initializeVideoPlayerFuture;
+  final db = FirebaseFirestore.instance;
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  bool isPayment = false;
 
   @override
   void initState() {
     super.initState();
-
     _controller = VideoPlayerController.networkUrl(Uri.parse(widget.video));
-
     _initializeVideoPlayerFuture = _controller.initialize();
-
     _controller.setLooping(true);
   }
 
   @override
   void dispose() {
     _controller.dispose();
-
     super.dispose();
   }
 
@@ -50,7 +51,6 @@ class _NontonState extends State<Nonton> {
     // Ambil deskripsi awal sebanyak 100 karakter
     String shortDesc = widget.desc.substring(0, 100);
     FirebaseStorage storageRef = FirebaseStorage.instance;
-
     storageRef
         .ref('Wreck-It Ralph.mp4')
         .getDownloadURL()
@@ -99,13 +99,15 @@ class _NontonState extends State<Nonton> {
                       size: 64.0,
                     ),
                     onPressed: () {
-                      setState(() {
-                        if (_controller.value.isPlaying) {
-                          _controller.pause();
-                        } else {
-                          _controller.play();
-                        }
-                      });
+                      if (isPayment) {
+                        setState(() {
+                          if (_controller.value.isPlaying) {
+                            _controller.pause();
+                          } else {
+                            _controller.play();
+                          }
+                        });
+                      }
                     },
                   ),
                 ),
@@ -164,26 +166,44 @@ class _NontonState extends State<Nonton> {
                             child: Text("See more..."),
                           ),
                           SizedBox(height: 8),
-                          ElevatedButton(
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text('Coin claimed!'),
-                                  content: Text('You have claimed 1 coint!'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text('OK'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                            child: Text("Claim 1 coin"),
-                          ),
+                          StreamBuilder(
+                              stream: db
+                                  .collection("userData")
+                                  .doc(uid)
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                var data = snapshot.data;
+                                return ElevatedButton(
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: Text('Success payment'),
+                                        content: Text('Enjoy the film'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              int coins = data?['coins'];
+                                              db
+                                                  .collection("userData")
+                                                  .doc(uid)
+                                                  .set({
+                                                "coins": coins - 30,
+                                              }, SetOptions(merge: true));
+                                              setState(() {
+                                                isPayment = true;
+                                              });
+                                              Navigator.pop(context);
+                                            },
+                                            child: Text('OK'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                  child: Text("Pay 30 coin"),
+                                );
+                              }),
                         ],
                       ),
                     ),
